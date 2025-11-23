@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.log
+.env
+.vscode/
+.DS_Store
+/mysql/
+/.terraform/
+# Docker
+docker-compose.override.yml
+# Zabbix export
+*.xml
