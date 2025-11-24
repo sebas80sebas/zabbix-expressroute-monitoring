@@ -224,70 +224,194 @@ This item extracts the RPO value from the JSON using JSONPath.
    - **JSONPath**: `$.data[0].HOSTNAME`
 3. Click **Add**
 
-### 11. Create Triggers (Alerts)
+### 11. Create Additional Dependent Items
+
+Create these additional items to monitor more metrics:
+
+#### 11.1 Circuit State
+
+- **Name**: `ExpressRoute Circuit State`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.circuit.state["vm-name-de-prueba"]`
+- **Type of information**: `Character`
+- **Preprocessing**: JSONPath → `$.data[0].CIRCUIT_STATE`
+
+#### 11.2 BGP State
+
+- **Name**: `ExpressRoute BGP State`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.bgp.state["vm-name-de-prueba"]`
+- **Type of information**: `Character`
+- **Preprocessing**: JSONPath → `$.data[0].BGP_STATE`
+
+#### 11.3 ARP Availability
+
+- **Name**: `ExpressRoute ARP Availability`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.arp.availability["vm-name-de-prueba"]`
+- **Type of information**: `Numeric (float)`
+- **Units**: `%`
+- **Preprocessing**: JSONPath → `$.data[0].ARP_AVAILABILITY`
+
+#### 11.4 BGP Availability
+
+- **Name**: `ExpressRoute BGP Availability`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.bgp.availability["vm-name-de-prueba"]`
+- **Type of information**: `Numeric (float)`
+- **Units**: `%`
+- **Preprocessing**: JSONPath → `$.data[0].BGP_AVAILABILITY`
+
+#### 11.5 Inbound Bandwidth
+
+- **Name**: `ExpressRoute Bandwidth In`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.bandwidth.in["vm-name-de-prueba"]`
+- **Type of information**: `Numeric (float)`
+- **Units**: `Mbps`
+- **Preprocessing**: JSONPath → `$.data[0].BANDWIDTH_IN_MBPS`
+
+#### 11.6 Outbound Bandwidth
+
+- **Name**: `ExpressRoute Bandwidth Out`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.bandwidth.out["vm-name-de-prueba"]`
+- **Type of information**: `Numeric (float)`
+- **Units**: `Mbps`
+- **Preprocessing**: JSONPath → `$.data[0].BANDWIDTH_OUT_MBPS`
+
+#### 11.7 Latency
+
+- **Name**: `ExpressRoute Latency`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.latency["vm-name-de-prueba"]`
+- **Type of information**: `Numeric (float)`
+- **Units**: `ms`
+- **Preprocessing**: JSONPath → `$.data[0].LATENCY_MS`
+
+#### 11.8 Overall Status
+
+- **Name**: `ExpressRoute Overall Status`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.status["vm-name-de-prueba"]`
+- **Type of information**: `Character`
+- **Preprocessing**: JSONPath → `$.data[0].STATUS`
+
+#### 11.9 Last Check Timestamp
+
+- **Name**: `ExpressRoute Last Check`
+- **Type**: `Dependent item`
+- **Master item**: `ExpressRoute RAW`
+- **Key**: `expressroute.timestamp["vm-name-de-prueba"]`
+- **Type of information**: `Numeric (unsigned)`
+- **Units**: `unixtime`
+- **Preprocessing**: JSONPath → `$.data[0].TIMESTAMP`
+
+## Creating Triggers (Alerts)
 
 Create triggers to generate alerts based on thresholds:
 
-#### Example: Alert if RPO exceeds 300 seconds
+### 12. Advanced Triggers
 
-1. Go to **Data collection** → **Hosts**
-2. Select `local-test` → **Triggers** → **Create trigger**
-3. Configure:
-   - **Name**: `ExpressRoute RPO is too high`
-   - **Severity**: `Warning` or `High`
-   - **Expression**: Click **Add**
-     - Item: Select `RPO last`
-     - Function: `last()`
-     - Operator: `>`
-     - Value: `300`
-   
-   Or manually enter the expression:
-   ```
-   last(/local-test/expressroute.rpo["vm-name-de-prueba"])>300
-   ```
+#### 12.1 High RPO
 
-4. **Description** (optional):
-   ```
-   ExpressRoute RPO value is {ITEM.LASTVALUE}, exceeding the threshold of 300 seconds.
-   ```
-5. Click **Add**
+- **Name**: `ExpressRoute RPO is too high on {HOST.NAME}`
+- **Severity**: `High`
+- **Expression**: `last(/local-test/expressroute.rpo["vm-name-de-prueba"])>300`
+- **Recovery expression**: `last(/local-test/expressroute.rpo["vm-name-de-prueba"])<200`
+- **Description**: `RPO value is {ITEM.LASTVALUE}s, exceeding threshold of 300s`
 
-The trigger will fire when the RPO value exceeds 300 seconds.
+#### 12.2 Circuit Disabled
 
-### 12. Test Trigger with script
+- **Name**: `ExpressRoute Circuit is not Enabled`
+- **Severity**: `Disaster`
+- **Expression**: `last(/local-test/expressroute.circuit.state["vm-name-de-prueba"])<>"Enabled"`
+- **Description**: `Circuit state is {ITEM.LASTVALUE}, expected Enabled`
 
-Edit the script
+#### 12.3 BGP Disconnected
+
+- **Name**: `ExpressRoute BGP Connection Lost`
+- **Severity**: `High`
+- **Expression**: `last(/local-test/expressroute.bgp.state["vm-name-de-prueba"])<>"Connected"`
+- **Description**: `BGP state is {ITEM.LASTVALUE}`
+
+#### 12.4 Low BGP Availability
+
+- **Name**: `ExpressRoute BGP Availability below 95%`
+- **Severity**: `Warning`
+- **Expression**: `last(/local-test/expressroute.bgp.availability["vm-name-de-prueba"])<95`
+- **Description**: `BGP availability is {ITEM.LASTVALUE}%, below 95% threshold`
+
+#### 12.5 Low ARP Availability
+
+- **Name**: `ExpressRoute ARP Availability below 95%`
+- **Severity**: `Warning`
+- **Expression**: `last(/local-test/expressroute.arp.availability["vm-name-de-prueba"])<95`
+- **Description**: `ARP availability is {ITEM.LASTVALUE}%, below 95% threshold`
+
+#### 12.6 High Latency
+
+- **Name**: `ExpressRoute Latency is high`
+- **Severity**: `Warning`
+- **Expression**: `last(/local-test/expressroute.latency["vm-name-de-prueba"])>30`
+- **Description**: `Latency is {ITEM.LASTVALUE}ms, exceeding 30ms threshold`
+
+#### 12.7 High Bandwidth Utilization
+
+- **Name**: `ExpressRoute Bandwidth utilization is high`
+- **Severity**: `Warning`
+- **Expression**: `last(/local-test/expressroute.bandwidth.in["vm-name-de-prueba"])>800`
+- **Description**: `Incoming bandwidth is {ITEM.LASTVALUE}Mbps, exceeding 80% of capacity (1000 Mbps)`
+
+## Testing Triggers
+
+### Test Trigger with script
+
+Edit the script to modify the RPO value:
+
 ```bash
 sudo nano /usr/lib/zabbix/externalscripts/expressroute_rpo.py
 ```
 
-Modify the RPO line to return a high value
+Modify the RPO line to return a high value:
 
-**"RPO": 450** 
+```
+"RPO": 450
+```
 
-Save the file and test
+Save the file and test:
+
 ```bash
 sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
 ```
 
-Verify the outputs
+### Run Test Script
 
+Copy and execute the test script to verify all monitoring components:
 
-**Monitoring → Problems**
+```bash
+sudo cp test_expressroute.sh /usr/local/bin/
+sudo chmod +x /usr/local/bin/test_expressroute.sh
+sudo /usr/local/bin/test_expressroute.sh
+```
 
-All active problems appear here.
-You will see "RPO too high" when RPO > 300.
+This script will validate the configuration and trigger all alerts for testing purposes.
 
-**Monitoring → Latest data**
+### Verify the outputs in Zabbix
 
-Filter by local-test.
-Click on the RPO last value to see the current value.
-If it is >300, the trigger should be active.
+**Monitoring → Problems**: All active problems appear here. You will see "RPO too high" when RPO > 300.
 
-**Monitoring → Hosts**
+**Monitoring → Latest data**: Filter by local-test. Click on the RPO last value to see the current value. If it is >300, the trigger should be active.
 
-Look at the Problems column.
-If the trigger is active, you will see a red number.
+**Monitoring → Hosts**: Look at the Problems column. If the trigger is active, you will see a red number.
 
 ## Troubleshooting
 
