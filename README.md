@@ -157,7 +157,7 @@ sudo chmod +x /usr/lib/zabbix/externalscripts/expressroute_rpo.py
 Set proper ownership:
 
 ```bash
-chown zabbix:zabbix /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+sudo chown zabbix:zabbix /usr/lib/zabbix/externalscripts/expressroute_rpo.py
 ```
 
 ### 8. Verify script availability
