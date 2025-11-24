@@ -150,8 +150,8 @@ chmod 755 /usr/lib/zabbix/externalscripts
 Copy your script:
 
 ```bash
-cp expressroute_rpo.py /usr/lib/zabbix/externalscripts/
-chmod +x /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+sudo cp expressroute_rpo.py /usr/lib/zabbix/externalscripts/
+sudo chmod +x /usr/lib/zabbix/externalscripts/expressroute_rpo.py
 ```
 
 Set proper ownership:
