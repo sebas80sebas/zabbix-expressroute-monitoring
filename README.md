@@ -13,7 +13,7 @@ Zabbix monitoring system deployed with Docker Compose.
 ### 1. Start the containers
 
 ```bash
-sudo docker-compose up -d
+sudo docker compose up -d
 ```
 
 This command downloads the necessary images (if it's the first time) and starts all services in the background.
