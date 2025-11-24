@@ -1,65 +1,124 @@
 # ExpressRoute Monitoring for Zabbix
 
-Zabbix monitoring system deployed with Docker Compose.
+Zabbix monitoring system installed locally on Ubuntu 24.04 following the official Zabbix documentation.
 
 ## Prerequisites
 
-- Docker installed
-- Docker Compose installed
-- Available ports: 8081, 10050, 10051
+- Ubuntu 24.04 LTS
+- MySQL Server installed and running
+- Apache2 installed and running
+- Available ports: 80 (Apache), 10050 (Zabbix Agent), 10051 (Zabbix Server)
 
 ## Installation
 
-### 1. Start the containers
+### 1. Install Zabbix 7.4
+
+Follow the official Zabbix installation guide for Ubuntu 24.04:
 
 ```bash
-sudo docker compose up -d
+# Download and install Zabbix repository
+wget https://repo.zabbix.com/zabbix/7.4/release/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_7.4+ubuntu24.04_all.deb
+dpkg -i zabbix-release_latest_7.4+ubuntu24.04_all.deb
+apt update
+
+# Install Zabbix components
+apt install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
 ```
 
-This command downloads the necessary images (if it's the first time) and starts all services in the background.
-
-### 2. Verify the status
+### 2. Configure MySQL database
 
 ```bash
-sudo docker-compose ps
+# Access MySQL
+mysql -uroot -p
+
+# Create database and user
+CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+CREATE USER 'zabbix'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';
+SET GLOBAL log_bin_trust_function_creators = 1;
+QUIT;
+
+# Import initial schema
+zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -ppassword zabbix
+
+# Disable log_bin_trust_function_creators
+mysql -uroot -p -e "SET GLOBAL log_bin_trust_function_creators = 0;"
 ```
 
-You should see 4 containers in "running" state:
-- zabbix-mysql
-- zabbix-server
-- zabbix-web
-- zabbix-agent
+### 3. Configure Zabbix Server
 
-### 3. Wait for initialization
-
-Wait 2-5 minutes for MySQL to initialize the database and Zabbix Server to create the necessary tables.
-
-You can monitor the logs with:
+Edit the configuration file:
 
 ```bash
-sudo docker-compose logs -f zabbix-server
+nano /etc/zabbix/zabbix_server.conf
 ```
 
-The server will be ready when you see the message: `server #0 started [main process]`
+Find and set the database password:
+
+```
+DBPassword=password
+```
+
+### 4. Start and enable services
+
+```bash
+systemctl restart zabbix-server zabbix-agent apache2
+systemctl enable zabbix-server zabbix-agent apache2
+```
+
+### 5. Verify installation
+
+Check service status:
+
+```bash
+systemctl status zabbix-server zabbix-agent apache2
+```
+
+Check logs:
+
+```bash
+tail -f /var/log/zabbix/zabbix_server.log
+```
 
 ## Web Interface Access
 
 ### Access URL
 
 ```
-http://localhost:8081
+http://localhost/zabbix
 ```
+
+or
+
+```
+http://your-server-ip/zabbix
+```
+
+### Initial Setup Wizard
+
+Complete the web installation wizard:
+1. Check pre-requisites (all should be green)
+2. Configure database connection:
+   - Database type: MySQL
+   - Database host: localhost
+   - Database port: 0 (default)
+   - Database name: zabbix
+   - User: zabbix
+   - Password: password
+3. Set Zabbix server details (leave defaults)
+4. Review settings summary
+5. Finish installation
 
 ### Default credentials
 
 - Username: `Admin`
 - Password: `zabbix`
 
-Note: The 'A' in Admin is uppercase.
+**Important**: Change the Admin password immediately after first login.
 
 ## Configuration
 
-### 4. Add a test Host (localhost)
+### 6. Add a test Host (localhost)
 
 In the web interface:
 
@@ -67,66 +126,53 @@ In the web interface:
 2. Click **Create host**
 3. Fill in the host configuration:
    - **Host name**: `local-test`
-   - **Groups**: Select `Discovered hosts` or create a new group
+   - **Groups**: Select `Linux servers` or create a new group
    - **Interfaces**: Click **Add** → Select **Agent**
-     - **IP address**: Leave empty or any value
-     - **DNS name**: `zabbix-agent`
-     - **Connect to**: Select **DNS** (not IP)
+     - **IP address**: `127.0.0.1`
+     - **DNS name**: `localhost`
+     - **Connect to**: Select **IP**
      - **Port**: `10050`
 4. Go to the **Templates** tab
 5. Click **Select** and add: `Linux by Zabbix agent`
 6. Click **Add** (at the bottom of the page)
 
-The Zabbix Agent container will start sending data automatically.
+The local Zabbix Agent will start sending data automatically.
 
-> **Note**: Use DNS name instead of IP address because containers communicate through Docker's internal network using service names defined in docker-compose.yml.
+### 7. Add ExpressRoute monitoring script
 
-### 5. Add ExpressRoute monitoring script
-
-Create the scripts directory (if it doesn't exist):
+Create the external scripts directory (if it doesn't exist):
 
 ```bash
-mkdir -p scripts
-chmod 755 scripts
+mkdir -p /usr/lib/zabbix/externalscripts
+chmod 755 /usr/lib/zabbix/externalscripts
 ```
 
-Save your script inside:
+Copy your script:
 
 ```bash
-scripts/expressroute_rpo.py
+cp expressroute_rpo.py /usr/lib/zabbix/externalscripts/
+chmod +x /usr/lib/zabbix/externalscripts/expressroute_rpo.py
 ```
 
-Make it executable:
+Set proper ownership:
 
 ```bash
-chmod +x scripts/expressroute_rpo.py
+chown zabbix:zabbix /usr/lib/zabbix/externalscripts/expressroute_rpo.py
 ```
 
-This script will be automatically available inside the Zabbix server container at:
-
-```
-/usr/lib/zabbix/externalscripts/expressroute_rpo.py
-```
-
-### 6. Verify script availability
-
-Check that the script is mounted correctly:
-
-```bash
-docker exec zabbix-server ls -la /usr/lib/zabbix/externalscripts/
-```
+### 8. Verify script availability
 
 Test the script execution:
 
 ```bash
-docker exec zabbix-server python3 /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
+sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
 ```
 
 You should see a JSON response with simulated data.
 
 ## Creating Monitoring Items
 
-### 7. Create a Master Item to execute the script
+### 9. Create a Master Item to execute the script
 
 On your `local-test` host:
 
@@ -145,7 +191,7 @@ This item executes your script and stores the complete JSON response.
 
 > **Note**: The key format for external checks in Zabbix is `script_name[parameters]`. The script must be executable and located in `/usr/lib/zabbix/externalscripts/`.
 
-### 8. Create Dependent Items (parsing JSON data)
+### 10. Create Dependent Items (parsing JSON data)
 
 Now create dependent items to extract specific values from the JSON response:
 
@@ -178,7 +224,7 @@ This item extracts the RPO value from the JSON using JSONPath.
    - **JSONPath**: `$.data[0].HOSTNAME`
 3. Click **Add**
 
-### 9. Create Triggers (Alerts)
+### 11. Create Triggers (Alerts)
 
 Create triggers to generate alerts based on thresholds:
 
@@ -197,7 +243,7 @@ Create triggers to generate alerts based on thresholds:
    
    Or manually enter the expression:
    ```
-   last(/local-test/expressroute_rpo.py["vm-name-de-prueba"].rpo)>300
+   last(/local-test/expressroute.rpo["vm-name-de-prueba"])>300
    ```
 
 4. **Description** (optional):
@@ -210,31 +256,57 @@ The trigger will fire when the RPO value exceeds 300 seconds.
 
 ## Troubleshooting
 
-### Check container logs
+### Check service status
+
+```bash
+systemctl status zabbix-server zabbix-agent apache2
+```
+
+### Check logs
 
 ```bash
 # Zabbix Server logs
-sudo docker-compose logs -f zabbix-server
+tail -f /var/log/zabbix/zabbix_server.log
 
-# All services
-sudo docker-compose logs -f
+# Apache logs
+tail -f /var/log/apache2/error.log
+tail -f /var/log/apache2/access.log
 ```
 
 ### Restart services
 
 ```bash
-sudo docker-compose restart
+systemctl restart zabbix-server zabbix-agent apache2
 ```
 
-### Complete reset
+### Test external script manually
 
 ```bash
-sudo docker-compose down -v
-sudo docker-compose up -d
+sudo -u zabbix /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
 ```
+
+### Verify script permissions
+
+```bash
+ls -la /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+```
+
+Should show:
+```
+-rwxr-xr-x 1 zabbix zabbix ... expressroute_rpo.py
+```
+
+## Configuration Files Location
+
+- Zabbix Server config: `/etc/zabbix/zabbix_server.conf`
+- Zabbix Agent config: `/etc/zabbix/zabbix_agent.conf`
+- Apache Zabbix config: `/etc/apache2/conf-enabled/zabbix.conf`
+- External scripts: `/usr/lib/zabbix/externalscripts/`
+- Logs: `/var/log/zabbix/`
 
 ## Notes
 
 - The monitoring script runs in **simulated mode** by default (`SIMULATED_MODE = True`)
 - To use real Azure ExpressRoute monitoring, modify the script configuration and set `SIMULATED_MODE = False`
 - Ensure the Zabbix server has network access to Azure IMDS endpoint when using real mode
+- Default timezone for Zabbix web interface can be configured in **Administration** → **Users** → **Admin** → **User** tab
