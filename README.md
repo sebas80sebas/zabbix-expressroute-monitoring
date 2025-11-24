@@ -254,6 +254,41 @@ Create triggers to generate alerts based on thresholds:
 
 The trigger will fire when the RPO value exceeds 300 seconds.
 
+### 12. Test Trigger with script
+
+Edit the script
+```bash
+sudo nano /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+```
+
+Modify the RPO line to return a high value
+
+**"RPO": 450** 
+
+Save the file and test
+```bash
+sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
+```
+
+Verify the outputs
+
+
+**Monitoring → Problems**
+
+All active problems appear here.
+You will see "RPO too high" when RPO > 300.
+
+**Monitoring → Latest data**
+
+Filter by local-test.
+Click on the RPO last value to see the current value.
+If it is >300, the trigger should be active.
+
+**Monitoring → Hosts**
+
+Look at the Problems column.
+If the trigger is active, you will see a red number.
+
 ## Troubleshooting
 
 ### Check service status
