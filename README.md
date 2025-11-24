@@ -156,6 +156,7 @@ Now create dependent items to extract specific values from the JSON response:
    - **Name**: `RPO last`
    - **Type**: `Dependent item`
    - **Master item**: Select `ExpressRoute RAW`
+   - **Key**: `expressroute.rpo["vm-name-de-prueba"]`
    - **Type of information**: `Numeric (unsigned)`
 3. Go to the **Preprocessing** tab:
    - Click **Add**
@@ -171,6 +172,7 @@ This item extracts the RPO value from the JSON using JSONPath.
    - **Name**: `ExpressRoute Circuit Name`
    - **Type**: `Dependent item`
    - **Master item**: `ExpressRoute RAW`
+   - **Key**: `expressroute.hostname["vm-name-de-prueba"]`
    - **Type of information**: `Text`
 2. **Preprocessing**:
    - **JSONPath**: `$.data[0].HOSTNAME`
