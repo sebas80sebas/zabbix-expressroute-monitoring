@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # Base de datos MySQL para Zabbix
+  mysql-server:
+    image: mysql:8.0
+    container_name: zabbix-mysql
+    environment:
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - zabbix-network
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_bin
+      - --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+
+  # Servidor Zabbix
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:alpine-7.0-latest
+    container_name: zabbix-server
+    environment:
+      DB_SERVER_HOST: mysql-server
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix_password
+      MYSQL_ROOT_PASSWORD: root_password
+      ZBX_ENABLE_SNMP_TRAPS: "true"
+    volumes:
+      - ./scripts:/usr/lib/zabbix/externalscripts
+      - zabbix-alertscripts:/usr/lib/zabbix/alertscripts
+    ports:
+      - "10051:10051"
+    networks:
+      - zabbix-network
+    depends_on:
+      - mysql-server
+    restart: unless-stopped
+    command: >
+      sh -c "apk add --no-cache python3 py3-pip &&
+             pip3 install requests &&
+             /usr/sbin/zabbix_server --foreground -c /etc/zabbix/zabbix_server.conf"
+
+  # Frontend Web de Zabbix
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:alpine-7.0-latest
+    container_name: zabbix-web
+    environment:
+      ZBX_SERVER_HOST: zabbix-server
+      DB_SERVER_HOST: mysql-server
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix_password
+      PHP_TZ: Europe/Madrid
+    ports:
+      - "8081:8080"
+    networks:
+      - zabbix-network
+    depends_on:
+      - mysql-server
+      - zabbix-server
+    restart: unless-stopped
+
+  # Agente Zabbix (para monitorizar el propio servidor)
+  zabbix-agent:
+    image: zabbix/zabbix-agent:alpine-7.0-latest
+    container_name: zabbix-agent
+    environment:
+      ZBX_HOSTNAME: "Zabbix server"
+      ZBX_SERVER_HOST: zabbix-server
+    ports:
+      - "10050:10050"
+    networks:
+      - zabbix-network
+    depends_on:
+      - zabbix-server
+    restart: unless-stopped
+
+networks:
+  zabbix-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  zabbix-scripts:
+  zabbix-alertscripts:
