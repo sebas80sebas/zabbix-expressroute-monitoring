@@ -150,14 +150,14 @@ chmod 755 /usr/lib/zabbix/externalscripts
 Copy your script:
 
 ```bash
-sudo cp expressroute_rpo.py /usr/lib/zabbix/externalscripts/
-sudo chmod +x /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+sudo cp expressroute_monitor.py /usr/lib/zabbix/externalscripts/
+sudo chmod +x /usr/lib/zabbix/externalscripts/expressroute_monitor.py
 ```
 
 Set proper ownership:
 
 ```bash
-sudo chown zabbix:zabbix /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+sudo chown zabbix:zabbix /usr/lib/zabbix/externalscripts/expressroute_monitor.py
 ```
 
 ### 8. Verify script availability
@@ -165,7 +165,7 @@ sudo chown zabbix:zabbix /usr/lib/zabbix/externalscripts/expressroute_rpo.py
 Test the script execution:
 
 ```bash
-sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
+sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/expressroute_monitor.py test_circuit
 ```
 
 You should see a JSON response with simulated data.
@@ -182,7 +182,7 @@ On your `local-test` host:
 4. Configure the master item:
    - **Name**: `ExpressRoute RAW`
    - **Type**: `External check`
-   - **Key**: `expressroute_rpo.py["vm-name-de-prueba"]`
+   - **Key**: `expressroute_monitor.py["vm-name-de-prueba"]`
    - **Type of information**: `Text`
    - **Update interval**: `60s`
 5. Click **Add**
@@ -378,7 +378,7 @@ Create triggers to generate alerts based on thresholds:
 Edit the script to modify the RPO value:
 
 ```bash
-sudo nano /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+sudo nano /usr/lib/zabbix/externalscripts/expressroute_monitor.py
 ```
 
 Modify the RPO line to return a high value:
@@ -390,7 +390,7 @@ Modify the RPO line to return a high value:
 Save the file and test:
 
 ```bash
-sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
+sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/expressroute_monitor.py test_circuit
 ```
 
 ### Run Test Script
@@ -441,18 +441,18 @@ systemctl restart zabbix-server zabbix-agent apache2
 ### Test external script manually
 
 ```bash
-sudo -u zabbix /usr/lib/zabbix/externalscripts/expressroute_rpo.py test_circuit
+sudo -u zabbix /usr/lib/zabbix/externalscripts/expressroute_monitor.py test_circuit
 ```
 
 ### Verify script permissions
 
 ```bash
-ls -la /usr/lib/zabbix/externalscripts/expressroute_rpo.py
+ls -la /usr/lib/zabbix/externalscripts/expressroute_monitor.py
 ```
 
 Should show:
 ```
--rwxr-xr-x 1 zabbix zabbix ... expressroute_rpo.py
+-rwxr-xr-x 1 zabbix zabbix ... expressroute_monitor.py
 ```
 
 ## Configuration Files Location
@@ -465,7 +465,7 @@ Should show:
 
 ## Notes
 
-- The monitoring script runs in **simulated mode** by default (`SIMULATED_MODE = True`)
-- To use real Azure ExpressRoute monitoring, modify the script configuration and set `SIMULATED_MODE = False`
+- The monitoring script runs in **simulated mode** by default
+- To use real Azure ExpressRoute monitoring, modify the script configuration 
 - Ensure the Zabbix server has network access to Azure IMDS endpoint when using real mode
 - Default timezone for Zabbix web interface can be configured in **Administration** → **Users** → **Admin** → **User** tab
