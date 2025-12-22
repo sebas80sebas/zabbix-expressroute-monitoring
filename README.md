@@ -589,8 +589,6 @@ To monitor additional data from the JSON output:
    - **Parameters**: Your desired JSON path (e.g., `$.data.sku.tier`)
 5. Configure remaining item properties (type, units, etc.)
 
-
-
 ## Troubleshooting
 
 ### Script Returns No Data or Errors
@@ -646,20 +644,20 @@ sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/express_route_monitor.py 
 - **Scope Limited**: Permissions are scoped to specific ExpressRoute circuit resources
 - **Secure by Default**: No secrets or keys stored in configuration files
 
-## Integration with Zabbix
+## Security Considerations
 
-Once the script is working correctly, you can integrate it with Zabbix by:
-
-1. Creating a new host for the ExpressRoute circuit
-2. Adding external check items that call the script
-3. Setting up triggers based on metric thresholds
-4. Configuring graphs and dashboards
+- **No Credentials Required**: Uses Azure Managed Identity for authentication
+- **Least Privilege**: Only Reader and Monitoring Reader roles are assigned
+- **Scope Limited**: Permissions are scoped to specific ExpressRoute circuit resources
+- **Secure by Default**: No secrets or keys stored in configuration files
 
 ## Additional Resources
 
 - [Azure Managed Identity Documentation](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/)
 - [Azure ExpressRoute Monitoring](https://docs.microsoft.com/azure/expressroute/expressroute-monitoring-metrics-alerts)
 - [Zabbix External Checks](https://www.zabbix.com/documentation/current/manual/config/items/itemtypes/external)
+- [Zabbix Template Documentation](https://www.zabbix.com/documentation/current/manual/config/templates)
+- [Zabbix JSON Preprocessing](https://www.zabbix.com/documentation/current/manual/config/items/preprocessing/jsonpath_functionality)
 
 ## Support
 
@@ -668,4 +666,4 @@ For issues or questions:
 - Verify Managed Identity is enabled on the VM
 - Review Zabbix server logs for errors
 - Ensure network connectivity to Azure management endpoints
-  
+- Verify external scripts are enabled in Zabbix configuration
