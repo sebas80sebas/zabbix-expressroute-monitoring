@@ -1,0 +1,289 @@
+{
+    "zabbix_export": {
+        "version": "5.2",
+        "date": "2025-12-22T22:33:37Z",
+        "groups": [
+            {
+                "name": "Virtual machines"
+            }
+        ],
+        "templates": [
+            {
+                "template": "Template Azure ExpressRoute",
+                "name": "Template Azure ExpressRoute",
+                "groups": [
+                    {
+                        "name": "Virtual machines"
+                    }
+                ],
+                "items": [
+                    {
+                        "name": "ExpressRoute - ARP Availability",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.arpavailability",
+                        "delay": "0",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.metrics.ArpAvailability"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        },
+                        "triggers": [
+                            {
+                                "expression": "{last()}<50",
+                                "name": "ExpressRoute ARP Availability < 50%",
+                                "priority": "HIGH"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ExpressRoute - BGP Availability",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.bgpavailability",
+                        "delay": "0",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.metrics.BgpAvailability"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        },
+                        "triggers": [
+                            {
+                                "expression": "{last()}<50",
+                                "name": "ExpressRoute BGP Availability < 50%",
+                                "priority": "HIGH"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ExpressRoute - Bits In Per Second",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.bitsinpersecond",
+                        "delay": "0",
+                        "units": "bps",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.metrics.BitsInPerSecond"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        }
+                    },
+                    {
+                        "name": "ExpressRoute - Bits Out Per Second",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.bitsoutpersecond",
+                        "delay": "0",
+                        "units": "bps",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.metrics.BitsOutPerSecond"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        }
+                    },
+                    {
+                        "name": "ExpressRoute - Egress Bandwidth Utilization",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.egressbandwidthutilization",
+                        "delay": "0",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.metrics.EgressBandwidthUtilization"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        },
+                        "triggers": [
+                            {
+                                "expression": "{last()}>95",
+                                "name": "ExpressRoute Egress Utilization > 95%",
+                                "priority": "HIGH"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ExpressRoute - Health Status",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.healthstatus",
+                        "delay": "0",
+                        "trends": "0",
+                        "value_type": "CHAR",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.healthStatus"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        },
+                        "triggers": [
+                            {
+                                "expression": "{last()}=\"Degraded\"",
+                                "name": "ExpressRoute Circuit is Degraded",
+                                "priority": "DISASTER"
+                            },
+                            {
+                                "expression": "{last()}=\"Unavailable\"",
+                                "name": "ExpressRoute Circuit is Unavailable",
+                                "priority": "DISASTER"
+                            },
+                            {
+                                "expression": "{last()}=\"Unhealthy\"",
+                                "name": "ExpressRoute Circuit is Unhealthy",
+                                "priority": "DISASTER"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ExpressRoute - Ingress Bandwidth Utilization",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.ingressbandwidthutilization",
+                        "delay": "0",
+                        "value_type": "FLOAT",
+                        "units": "%",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.metrics.IngressBandwidthUtilization"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        },
+                        "triggers": [
+                            {
+                                "expression": "{last()}>95",
+                                "name": "ExpressRoute Ingress Utilization > 95%",
+                                "priority": "HIGH"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ExpressRoute Circuit - Name",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.name",
+                        "delay": "0",
+                        "trends": "0",
+                        "value_type": "CHAR",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.name"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        }
+                    },
+                    {
+                        "name": "ExpressRoute - Service Provider State",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.providerprovisioningstate",
+                        "delay": "0",
+                        "trends": "0",
+                        "value_type": "CHAR",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.serviceProviderProvisioningState"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        },
+                        "triggers": [
+                            {
+                                "expression": "{last()}<>\"Provisioned\"",
+                                "name": "ExpressRoute Circuit is not Provisioned",
+                                "priority": "HIGH"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ExpressRoute - Circuit Provisioning State",
+                        "type": "DEPENDENT",
+                        "key": "expressroute.provisioningstate",
+                        "delay": "0",
+                        "trends": "0",
+                        "value_type": "CHAR",
+                        "preprocessing": [
+                            {
+                                "type": "JSONPATH",
+                                "parameters": [
+                                    "$.data.circuitProvisioningState"
+                                ]
+                            }
+                        ],
+                        "master_item": {
+                            "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]"
+                        },
+                        "triggers": [
+                            {
+                                "expression": "{last()}<>\"Enabled\"",
+                                "name": "ExpressRoute Circuit is not Enabled",
+                                "priority": "HIGH"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "ExpressRoute Circuit - Raw Data",
+                        "type": "EXTERNAL",
+                        "key": "express_route_monitor.py[\"{$AZ_SUBSCRIPTION}\",\"{$AZ_RG}\",\"{$AZ_ER_CIRCUIT}\"]",
+                        "trends": "0",
+                        "value_type": "TEXT"
+                    }
+                ],
+                "macros": [
+                    {
+                        "macro": "{$AZ_ER_CIRCUIT}"
+                    },
+                    {
+                        "macro": "{$AZ_RG}"
+                    },
+                    {
+                        "macro": "{$AZ_SUBSCRIPTION}"
+                    }
+                ]
+            }
+        ]
+    }
+}
