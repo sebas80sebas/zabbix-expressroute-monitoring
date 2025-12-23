@@ -651,6 +651,19 @@ sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/express_route_monitor.py 
 - **Scope Limited**: Permissions are scoped to specific ExpressRoute circuit resources
 - **Secure by Default**: No secrets or keys stored in configuration files
 
+## Integration with Zabbix
+
+The complete integration workflow:
+
+1. **Script Deployment**: Monitor script placed in Zabbix external scripts directory
+2. **Template Import**: Zabbix template defining items, triggers, and macros
+3. **Host Creation**: Individual hosts created for each ExpressRoute circuit
+4. **Macro Configuration**: Azure credentials configured per host
+5. **Data Collection**: Zabbix executes script at defined intervals
+6. **Metric Extraction**: Dependent items parse JSON output
+7. **Alerting**: Triggers fire based on configured thresholds
+8. **Visualization**: Graphs and dashboards display metrics
+
 ## Additional Resources
 
 - [Azure Managed Identity Documentation](https://docs.microsoft.com/azure/active-directory/managed-identities-azure-resources/)
