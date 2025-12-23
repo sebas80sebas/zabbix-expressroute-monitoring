@@ -1,10 +1,10 @@
 # Azure ExpressRoute Monitoring Setup Guide
 
-This guide explains how to set up monitoring for Azure ExpressRoute circuits using Zabbix with Managed Identity authentication.
+This guide explains how to set up monitoring for Azure ExpressRoute circuits using Zabbix with Python External Script.
 
 ## Overview
 
-This setup allows a Zabbix proxy running on an Azure VM to monitor ExpressRoute circuits using Azure's Managed Identity for secure authentication, eliminating the need for storing credentials.
+This setup allows a Zabbix proxy running on an Azure VM to monitor ExpressRoute circuits using Python External Script to retrieve certain metrics, and Azure's Managed Identity for secure authentication, eliminating the need for storing credentials.
 
 ## Prerequisites
 
